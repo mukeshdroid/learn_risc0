@@ -1,0 +1,11 @@
+{
+"critical_data": 48,
+    "obj_field": {
+        "string_subfield": "hello world",
+        "array_subfield": [
+            "more",
+            "example",
+            "text"
+        ]
+    }
+}
