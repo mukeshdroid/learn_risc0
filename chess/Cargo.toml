@@ -1,0 +1,17 @@
+[package]
+name = "chess"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chess-core = { path = "core" }
+chess-methods = { path = "methods" }
+clap = { version = "4.0", features = ["derive"] }
+risc0-zkvm = "2.0.2"
+# risc0-zkvm = { path = "../../risc0/zkvm" }
+shakmaty = "0.27"
+
+[features]
+cuda = ["risc0-zkvm/cuda"]
+default = []
+prove = ["risc0-zkvm/prove"]
