@@ -12,75 +12,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use chess_core::Inputs;
-use chess_methods::{CHECKMATE_ELF, CHECKMATE_ID};
-use clap::Parser;
+use garbling_core::{gen_labels, read_input, Inputs};
+use garbling_methods::{FREEXORGARBLE_ELF, FREEXORGARBLE_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use shakmaty::{fen::Fen, CastlingMode, Chess, FromSetup, Position, Setup};
 
-#[derive(Parser)]
-struct Cli {
-    #[arg(id = "MOVE", default_value = "Qxf7")]
-    mv: String,
 
-    #[arg(default_value = "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4")]
-    board: String,
-}
 
-fn main() {
-    let args = Cli::parse();
+fn main(){
+        // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
+        .init();
 
-    let inputs = Inputs {
-        board: args.board,
-        mv: args.mv,
-    };
+    // An executor environment describes the configurations for the zkVM
+    // including program inputs.
+    // A default ExecutorEnv can be created like so:
+    // `let env = ExecutorEnv::builder().build().unwrap();`
+    // However, this `env` does not have any inputs.
+    //
+    // To add guest input to the executor environment, use
+    // ExecutorEnvBuilder::write().
+    // To access this method, you'll need to use ExecutorEnv::builder(), which
+    // creates an ExecutorEnvBuilder. When you're done adding input, call
+    // ExecutorEnvBuilder::build().
 
-    let receipt = chess(&inputs);
+    // Setup the inputs.
+    let ckt_input = read_input();
+    let label_input= gen_labels(
+        ckt_input.get_input_wire_count(),
+        ckt_input.get_inner_wire_label_count());
 
-    // Verify receipt and parse it for committed data
-    receipt.verify(CHECKMATE_ID).unwrap();
-    let committed_state: String = receipt.journal.decode().unwrap();
-    assert_eq!(inputs.board, committed_state);
-    let fen = Fen::from_ascii(committed_state.as_bytes()).unwrap();
-    let setup = Setup::from(fen);
-    let pos = Chess::from_setup(setup, CastlingMode::Standard).unwrap();
-
-    println!(
-        "There is a checkmate for {:?} in this position:\n{:?}",
-        pos.turn(),
-        pos.board()
-    );
-}
-
-fn chess(inputs: &Inputs) -> Receipt {
     let env = ExecutorEnv::builder()
-        .write(inputs)
-        .unwrap()
-        .build()
-        .unwrap();
+    .write(&ckt_input).unwrap()
+    .write(&label_input).unwrap()
+    .build()
+    .unwrap();
 
     // Obtain the default prover.
     let prover = default_prover();
 
-    // Produce a receipt by proving the specified ELF binary.
-    prover.prove(env, CHECKMATE_ELF).unwrap().receipt
-}
+    // Proof information by proving the specified ELF binary.
+    // This struct contains the receipt along with statistics about execution of the guest
+    let prove_info = prover
+        .prove(env, FREEXORGARBLE_ELF)
+        .unwrap();
 
-#[cfg(test)]
-mod tests {
-    use chess_core::Inputs;
+    // extract the receipt.
+    let receipt = prove_info.receipt;
 
-    use crate::chess;
+    // TODO: Implement code for retrieving receipt journal here.
 
-    #[test]
-    fn main() {
-        const TEST_BOARD: &str =
-            "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4";
-        const TEST_MOVE: &str = "Qxf7";
+    // For example:
+    let _output: u32 = receipt.journal.decode().unwrap();
 
-        chess(&Inputs {
-            board: String::from(TEST_BOARD),
-            mv: String::from(TEST_MOVE),
-        });
-    }
+    // The receipt was verified at the end of proving, but the below code is an
+    // example of how someone else could verify this receipt.
+    receipt
+        .verify(FREEXORGARBLE_ID)
+        .unwrap();
 }

@@ -1,7 +1,12 @@
 [package]
-name = "chess-core"
+name = "garbling-core"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.98"
+rand = "0.9.1"
+rand_chacha = "0.9.0"
 serde = { version = "1.0", default-features = false }
+serde_bytes = "0.11.17"
+sha2 = "0.10.9"

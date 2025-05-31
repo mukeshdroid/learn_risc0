@@ -13,6 +13,6 @@ fn main() {
                 memory_barrier(&i);
             }
 
-            env::log("");
+            env::log("jj");
             env::commit(&iter);
 }

@@ -1,15 +1,13 @@
 [package]
-name = "chess"
+name = "garbling"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-chess-core = { path = "core" }
-chess-methods = { path = "methods" }
-clap = { version = "4.0", features = ["derive"] }
+garbling-core = { path = "core" }
+garbling-methods = { path = "methods" }
 risc0-zkvm = "2.0.2"
-# risc0-zkvm = { path = "../../risc0/zkvm" }
-shakmaty = "0.27"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [features]
 cuda = ["risc0-zkvm/cuda"]
